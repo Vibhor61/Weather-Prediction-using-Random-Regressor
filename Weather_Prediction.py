@@ -7,15 +7,20 @@ import streamlit as st
 import plotly.express as px
 
 def get_city_coordinates(city_name):
-    from geopy.geocoders import Nominatim
-    geolocator = Nominatim(user_agent="weather_app")
-    location = geolocator.geocode(city_name)
-    if location:
-        return location.latitude, location.longitude
-    else:
-        st.error(f"City '{city_name}' not found! Using Delhi as default.")
-        return 28.6139, 77.2090  
-
+    import requests
+    API_KEY = "67fd1958779a651e2031cffc0c5b0de6"  
+    try:
+        url = f"http://api.openweathermap.org/geo/1.0/direct?q={city_name}&limit=1&appid={API_KEY}"
+        response = requests.get(url, timeout=10)
+        data = response.json()
+        if data:
+            return data[0]["lat"], data[0]["lon"]
+        else:
+            st.error(f"City '{city_name}' not found! Using Delhi as default.")
+            return 28.6139, 77.2090
+    except:
+        st.error(f"Error fetching city coordinates. Using Delhi as default.")
+        return 28.6139, 77.2090
 
 def fetch_weather_data(city, days):
     lat, lon = get_city_coordinates(city)
@@ -158,5 +163,4 @@ if st.button("Predict Next 24 Hours"):
 
 
         st.subheader("Predicted Hourly Weather Parameters for Next 24 Hours")
-        st.dataframe(predicted_data[['Time', 'Predicted Tempearture',
-                                    'Predicted Humidity', 'Predicted_Pressure', 'Predicted Wind']])
+        st.dataframe(predicted_data[['timestamp', 'predicted_temp', 'predicted_humidity','predicted_pressure', 'predicted_wind']])
